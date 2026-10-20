@@ -1,0 +1,947 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ToyBox Gifts | متجر الألعاب والهدايا</title>
+  <meta name="description" content="ToyBox Gifts - متجر ألعاب وهدايا لجميع الأعمار. اطلب بسهولة عبر واتساب بدون تسجيل." />
+
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🧸</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet" />
+
+  <script src="https://cdn.tailwindcss.com/3.4.16"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Cairo', 'system-ui', 'sans-serif'] },
+          colors: {
+            brand: { 50: '#fff7ed', 100: '#ffedd5', 400: '#fb923c', 500: '#f97316', 600: '#ea580c', 700: '#c2410c' },
+            sky2: { 400: '#38bdf8', 500: '#0ea5e9' },
+          },
+        },
+      },
+    };
+  </script>
+
+  <style>
+    [x-cloak] { display: none !important; }
+    body { font-family: 'Cairo', system-ui, sans-serif; }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { scrollbar-width: none; }
+  </style>
+</head>
+
+<body class="bg-slate-50 text-slate-800 antialiased" x-data="app()">
+
+  <header class="sticky top-0 z-30 bg-white/90 backdrop-blur border-b border-slate-200">
+    <div class="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between gap-3">
+      <a href="#" @click.prevent="view = 'store'" class="flex items-center gap-2 shrink-0">
+        <span class="text-3xl">🧸</span>
+        <span class="text-xl sm:text-2xl font-extrabold tracking-tight">
+          <span class="text-brand-500">ToyBox</span> <span class="text-sky2-500">Gifts</span>
+        </span>
+      </a>
+
+      <div class="flex items-center gap-2">
+        <button x-show="view === 'admin'" @click="view = 'store'"
+                class="px-3 py-2 rounded-xl text-sm font-semibold bg-slate-100 hover:bg-slate-200">
+          ← العودة للمتجر
+        </button>
+        <button x-show="view === 'store'" @click="cartOpen = true"
+                class="relative inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-brand-500 hover:bg-brand-600 text-white font-bold shadow-sm transition"
+                aria-label="سلة التسوق">
+          <span>🛒</span>
+          <span class="hidden sm:inline">السلة</span>
+          <span x-show="cartCount > 0" x-text="cartCount"
+                class="absolute -top-2 -left-2 min-w-[1.4rem] h-[1.4rem] px-1 rounded-full bg-sky2-500 text-white text-xs grid place-items-center ring-2 ring-white"></span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main x-show="view === 'store'">
+
+    <section class="bg-gradient-to-l from-brand-100 via-white to-sky-100">
+      <div class="max-w-6xl mx-auto px-4 py-10 sm:py-14 text-center">
+        <h1 class="text-3xl sm:text-5xl font-extrabold leading-tight">
+          ألعاب وهدايا تصنع <span class="text-brand-500">الفرحة</span> 🎁
+        </h1>
+        <p class="mt-3 text-slate-600 text-base sm:text-lg max-w-2xl mx-auto">
+          تشكيلة مختارة لجميع الأعمار. أضف ما يعجبك إلى السلة واطلب مباشرة عبر واتساب — بدون تسجيل!
+        </p>
+        <div class="mt-6 max-w-md mx-auto relative">
+          <input type="search" x-model="search" placeholder="ابحث عن لعبة أو هدية..."
+                 class="w-full rounded-2xl border border-slate-200 bg-white px-5 py-3 pr-11 shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-400" />
+          <span class="absolute top-1/2 -translate-y-1/2 right-4 text-slate-400">🔍</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="max-w-6xl mx-auto px-4 pt-6">
+      <div class="flex gap-2 overflow-x-auto no-scrollbar pb-2">
+        <button @click="activeCategory = 'all'"
+                :class="activeCategory === 'all' ? 'bg-slate-800 text-white' : 'bg-white text-slate-700 hover:bg-slate-100'"
+                class="shrink-0 px-4 py-2 rounded-full border border-slate-200 font-semibold text-sm transition">
+          ✨ الكل
+        </button>
+        <template x-for="cat in categories" :key="cat.id">
+          <button @click="activeCategory = cat.id"
+                  :class="activeCategory === cat.id ? 'bg-slate-800 text-white' : 'bg-white text-slate-700 hover:bg-slate-100'"
+                  class="shrink-0 px-4 py-2 rounded-full border border-slate-200 font-semibold text-sm transition">
+            <span x-text="cat.emoji"></span> <span x-text="cat.name"></span>
+          </button>
+        </template>
+      </div>
+    </section>
+
+    <section class="max-w-6xl mx-auto px-4 py-6">
+      <div class="flex items-baseline justify-between mb-4">
+        <h2 class="text-xl font-bold" x-text="activeCategory === 'all' ? 'جميع المنتجات' : categoryName(activeCategory)"></h2>
+        <span class="text-sm text-slate-500" x-text="filteredProducts.length + ' منتج'"></span>
+      </div>
+
+      <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-5">
+        <template x-for="p in filteredProducts" :key="p.id">
+          <article class="group bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm hover:shadow-md hover:-translate-y-0.5 transition flex flex-col">
+            <button @click="detail = p" class="block aspect-square overflow-hidden bg-slate-100" :aria-label="p.title">
+              <template x-if="p.image && !brokenImages[p.id]">
+                <img :src="p.image" :alt="p.title" loading="lazy" @error="brokenImages[p.id] = true"
+                     class="w-full h-full object-cover group-hover:scale-105 transition duration-300" />
+              </template>
+              <template x-if="!p.image || brokenImages[p.id]">
+                <div class="w-full h-full grid place-items-center bg-gradient-to-br from-brand-100 to-sky-100 text-6xl"
+                     x-text="categoryEmoji(p.categoryId)"></div>
+              </template>
+            </button>
+            <div class="p-3 sm:p-4 flex flex-col flex-1">
+              <span class="text-xs text-sky2-500 font-semibold" x-text="categoryName(p.categoryId)"></span>
+              <h3 class="font-bold leading-snug mt-1 line-clamp-2 cursor-pointer hover:text-brand-600" @click="detail = p" x-text="p.title"></h3>
+              <div class="mt-auto pt-3 flex items-center justify-between gap-2">
+                <span class="text-lg font-extrabold text-brand-600" x-text="formatPrice(p.price)"></span>
+              </div>
+              <button @click="addToCart(p.id)"
+                      class="mt-3 w-full py-2 rounded-xl bg-brand-500 hover:bg-brand-600 active:scale-[.98] text-white font-bold text-sm transition">
+                + أضف إلى السلة
+              </button>
+            </div>
+          </article>
+        </template>
+      </div>
+
+      <div x-show="filteredProducts.length === 0" class="text-center py-16 text-slate-500">
+        <div class="text-5xl mb-3">🔎</div>
+        لا توجد منتجات مطابقة.
+      </div>
+    </section>
+
+    <footer class="border-t border-slate-200 bg-white">
+      <div class="max-w-6xl mx-auto px-4 py-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-sm text-slate-500">
+        <p>© <span x-text="new Date().getFullYear()"></span> ToyBox Gifts — جميع الحقوق محفوظة</p>
+        <button @click="openAdmin()" class="text-slate-400 hover:text-slate-400 cursor-default opacity-50">لوحة التحكم</button>
+      </div>
+    </footer>
+  </main>
+
+  <div x-show="detail" x-cloak class="fixed inset-0 z-40 grid place-items-center p-4" @keydown.escape.window="detail = null">
+    <div class="absolute inset-0 bg-black/50" @click="detail = null" x-transition.opacity></div>
+    <div x-show="detail" x-transition class="relative bg-white rounded-3xl max-w-lg w-full overflow-hidden shadow-xl max-h-[90vh] overflow-y-auto">
+      <template x-if="detail">
+        <div>
+          <div class="aspect-video bg-slate-100">
+            <template x-if="detail.image && !brokenImages[detail.id]">
+              <img :src="detail.image" :alt="detail.title" class="w-full h-full object-cover" />
+            </template>
+            <template x-if="!detail.image || brokenImages[detail.id]">
+              <div class="w-full h-full grid place-items-center bg-gradient-to-br from-brand-100 to-sky-100 text-7xl" x-text="categoryEmoji(detail.categoryId)"></div>
+            </template>
+          </div>
+          <div class="p-5">
+            <span class="text-xs text-sky2-500 font-semibold" x-text="categoryName(detail.categoryId)"></span>
+            <h3 class="text-2xl font-extrabold mt-1" x-text="detail.title"></h3>
+            <p class="text-slate-600 mt-3 leading-relaxed whitespace-pre-line" x-text="detail.description || 'لا يوجد وصف.'"></p>
+            <div class="mt-5 flex items-center justify-between gap-3">
+              <span class="text-2xl font-extrabold text-brand-600" x-text="formatPrice(detail.price)"></span>
+              <button @click="addToCart(detail.id); detail = null"
+                      class="px-5 py-3 rounded-xl bg-brand-500 hover:bg-brand-600 text-white font-bold">
+                + أضف إلى السلة
+              </button>
+            </div>
+          </div>
+          <button @click="detail = null" class="absolute top-3 left-3 w-9 h-9 rounded-full bg-white/90 shadow grid place-items-center" aria-label="إغلاق">✕</button>
+        </div>
+      </template>
+    </div>
+  </div>
+
+  <div x-show="cartOpen" x-cloak class="fixed inset-0 z-50" @keydown.escape.window="cartOpen = false">
+    <div class="absolute inset-0 bg-black/50" @click="cartOpen = false" x-transition.opacity></div>
+
+    <aside x-show="cartOpen"
+           x-transition:enter="transition ease-out duration-200" x-transition:enter-start="-translate-x-full" x-transition:enter-end="translate-x-0"
+           x-transition:leave="transition ease-in duration-150" x-transition:leave-start="translate-x-0" x-transition:leave-end="-translate-x-full"
+           class="absolute inset-y-0 left-0 w-full max-w-md bg-white shadow-2xl flex flex-col">
+      <div class="flex items-center justify-between px-5 h-16 border-b">
+        <h2 class="text-lg font-extrabold">🛒 سلة التسوق</h2>
+        <button @click="cartOpen = false" class="w-9 h-9 rounded-full hover:bg-slate-100 grid place-items-center" aria-label="إغلاق">✕</button>
+      </div>
+
+      <div class="flex-1 overflow-y-auto px-5 py-4">
+
+        <div x-show="cartItems.length === 0" class="text-center py-16 text-slate-500">
+          <div class="text-6xl mb-3">🧺</div>
+          <p>السلة فارغة حالياً</p>
+          <button @click="cartOpen = false" class="mt-4 px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 font-semibold">تسوّق الآن</button>
+        </div>
+
+        <ul class="space-y-3" x-show="cartItems.length > 0">
+          <template x-for="item in cartItems" :key="item.id">
+            <li class="flex gap-3 p-3 rounded-2xl border border-slate-200">
+              <div class="w-16 h-16 rounded-xl overflow-hidden bg-slate-100 shrink-0">
+                <template x-if="item.image && !brokenImages[item.id]">
+                  <img :src="item.image" :alt="item.title" class="w-full h-full object-cover" />
+                </template>
+                <template x-if="!item.image || brokenImages[item.id]">
+                  <div class="w-full h-full grid place-items-center bg-gradient-to-br from-brand-100 to-sky-100 text-2xl" x-text="categoryEmoji(item.categoryId)"></div>
+                </template>
+              </div>
+              <div class="flex-1 min-w-0">
+                <div class="flex justify-between gap-2">
+                  <h4 class="font-bold text-sm leading-snug truncate" x-text="item.title"></h4>
+                  <button @click="removeFromCart(item.id)" class="text-slate-400 hover:text-red-500 text-sm shrink-0" aria-label="حذف">🗑️</button>
+                </div>
+                <p class="text-xs text-slate-500 mt-0.5" x-text="formatPrice(item.price) + ' للقطعة'"></p>
+                <div class="mt-2 flex items-center justify-between">
+                  <div class="flex items-center rounded-xl border border-slate-200 overflow-hidden">
+                    <button @click="changeQty(item.id, 1)" class="w-8 h-8 hover:bg-slate-100 font-bold" aria-label="زيادة">+</button>
+                    <span class="w-8 text-center text-sm font-bold" x-text="item.qty"></span>
+                    <button @click="changeQty(item.id, -1)" class="w-8 h-8 hover:bg-slate-100 font-bold" aria-label="إنقاص">−</button>
+                  </div>
+                  <span class="font-extrabold text-brand-600 text-sm" x-text="formatPrice(item.price * item.qty)"></span>
+                </div>
+              </div>
+            </li>
+          </template>
+        </ul>
+
+        <form x-show="cartItems.length > 0" @submit.prevent="checkout()" class="mt-6 space-y-3" novalidate>
+          <h3 class="font-extrabold">بيانات التوصيل</h3>
+          <div>
+            <label class="block text-sm font-semibold mb-1" for="c-name">الاسم الكامل *</label>
+            <input id="c-name" type="text" x-model.trim="customer.name" autocomplete="name"
+                   class="w-full rounded-xl border px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-brand-400"
+                   :class="errors.name ? 'border-red-400' : 'border-slate-200'" />
+            <p x-show="errors.name" x-text="errors.name" class="text-xs text-red-500 mt-1"></p>
+          </div>
+          <div>
+            <label class="block text-sm font-semibold mb-1" for="c-phone">رقم الهاتف *</label>
+            <input id="c-phone" type="tel" dir="ltr" x-model.trim="customer.phone" autocomplete="tel" placeholder="05xxxxxxxx"
+                   class="w-full rounded-xl border px-4 py-2.5 text-right focus:outline-none focus:ring-2 focus:ring-brand-400"
+                   :class="errors.phone ? 'border-red-400' : 'border-slate-200'" />
+            <p x-show="errors.phone" x-text="errors.phone" class="text-xs text-red-500 mt-1"></p>
+          </div>
+          <div>
+            <label class="block text-sm font-semibold mb-1" for="c-address">عنوان التوصيل *</label>
+            <textarea id="c-address" rows="2" x-model.trim="customer.address" autocomplete="street-address"
+                      placeholder="المدينة، الحي، الشارع، رقم المبنى..."
+                      class="w-full rounded-xl border px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-brand-400"
+                      :class="errors.address ? 'border-red-400' : 'border-slate-200'"></textarea>
+            <p x-show="errors.address" x-text="errors.address" class="text-xs text-red-500 mt-1"></p>
+          </div>
+        </form>
+      </div>
+
+      <div x-show="cartItems.length > 0" class="border-t px-5 py-4 bg-slate-50">
+        <div class="flex items-center justify-between mb-3">
+          <span class="font-semibold text-slate-600">الإجمالي</span>
+          <span class="text-2xl font-extrabold" x-text="formatPrice(cartTotal)"></span>
+        </div>
+        <button @click="checkout()"
+                class="w-full py-3.5 rounded-2xl bg-[#25D366] hover:bg-[#1ebe5b] text-white font-extrabold text-lg flex items-center justify-center gap-2 shadow-sm transition">
+          <svg class="w-6 h-6" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17.47 14.38c-.3-.15-1.76-.87-2.03-.97-.27-.1-.47-.15-.67.15-.2.3-.77.97-.94 1.17-.17.2-.35.22-.65.07-.3-.15-1.26-.46-2.4-1.48-.89-.79-1.49-1.77-1.66-2.07-.17-.3-.02-.46.13-.61.13-.13.3-.35.45-.52.15-.17.2-.3.3-.5.1-.2.05-.37-.02-.52-.08-.15-.67-1.62-.92-2.22-.24-.58-.49-.5-.67-.51h-.57c-.2 0-.52.07-.8.37-.27.3-1.04 1.02-1.04 2.48s1.07 2.88 1.21 3.08c.15.2 2.1 3.2 5.08 4.49.71.31 1.26.49 1.69.63.71.23 1.36.2 1.87.12.57-.09 1.76-.72 2.01-1.41.25-.7.25-1.29.17-1.41-.07-.13-.27-.2-.57-.35zM12.04 21.5h-.01a9.45 9.45 0 0 1-4.82-1.32l-.35-.21-3.58.94.96-3.49-.23-.36a9.43 9.43 0 0 1-1.45-5.03c0-5.22 4.25-9.46 9.48-9.46 2.53 0 4.9.99 6.69 2.78a9.4 9.4 0 0 1 2.77 6.69c0 5.22-4.25 9.46-9.46 9.46zm8.05-17.51A11.32 11.32 0 0 0 12.04.66C5.77.66.66 5.76.66 12.04c0 2 .52 3.96 1.52 5.69L.57 23.6l6.01-1.58a11.36 11.36 0 0 0 5.45 1.39h.01c6.27 0 11.38-5.1 11.38-11.38 0-3.04-1.18-5.9-3.33-8.04z"/></svg>
+          إتمام الطلب عبر واتساب
+        </button>
+        <button @click="clearCart()" class="w-full mt-2 py-2 text-sm text-slate-500 hover:text-red-500">إفراغ السلة</button>
+      </div>
+    </aside>
+  </div>
+
+  <div x-show="loginOpen" x-cloak class="fixed inset-0 z-50 grid place-items-center p-4" @keydown.escape.window="loginOpen = false">
+    <div class="absolute inset-0 bg-black/50" @click="loginOpen = false"></div>
+    <form @submit.prevent="login()" class="relative bg-white rounded-3xl p-6 w-full max-w-sm shadow-xl">
+      <h3 class="text-xl font-extrabold mb-1">🔐 دخول لوحة التحكم</h3>
+      <p class="text-sm text-slate-500 mb-4">أدخل كلمة المرور للمتابعة</p>
+      <input type="password" x-model="loginPassword" x-ref="loginInput" placeholder="كلمة المرور"
+             class="w-full rounded-xl border border-slate-200 px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-brand-400" />
+      <p x-show="loginError" class="text-xs text-red-500 mt-2">كلمة المرور غير صحيحة</p>
+      <div class="mt-4 flex gap-2">
+        <button type="submit" class="flex-1 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-900 text-white font-bold">دخول</button>
+        <button type="button" @click="loginOpen = false" class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 font-semibold">إلغاء</button>
+      </div>
+    </form>
+  </div>
+
+  <section x-show="view === 'admin'" x-cloak class="max-w-6xl mx-auto px-4 py-6">
+    <div class="flex flex-wrap items-center justify-between gap-3 mb-6">
+      <div>
+        <h1 class="text-2xl font-extrabold">⚙️ لوحة التحكم</h1>
+        <p class="text-sm text-slate-500" x-text="products.length + ' منتج · ' + categories.length + ' تصنيف'"></p>
+      </div>
+      <div class="flex flex-wrap gap-2">
+        <button @click="exportData()" class="px-3 py-2 rounded-xl bg-white border border-slate-200 hover:bg-slate-100 text-sm font-semibold">⬇️ تصدير البيانات</button>
+        <label class="px-3 py-2 rounded-xl bg-white border border-slate-200 hover:bg-slate-100 text-sm font-semibold cursor-pointer">
+          ⬆️ استيراد
+          <input type="file" accept="application/json" class="hidden" @change="importData($event)" />
+        </label>
+        <button @click="resetData()" class="px-3 py-2 rounded-xl bg-white border border-red-200 text-red-600 hover:bg-red-50 text-sm font-semibold">↺ استعادة الافتراضي</button>
+        <button @click="logout()" class="px-3 py-2 rounded-xl bg-slate-800 text-white hover:bg-slate-900 text-sm font-semibold">تسجيل الخروج</button>
+      </div>
+    </div>
+
+    <div class="flex gap-2 mb-5">
+      <button @click="adminTab = 'products'" :class="adminTab === 'products' ? 'bg-brand-500 text-white' : 'bg-white hover:bg-slate-100'"
+              class="px-4 py-2 rounded-xl border border-slate-200 font-bold text-sm">📦 المنتجات</button>
+      <button @click="adminTab = 'categories'" :class="adminTab === 'categories' ? 'bg-brand-500 text-white' : 'bg-white hover:bg-slate-100'"
+              class="px-4 py-2 rounded-xl border border-slate-200 font-bold text-sm">🏷️ التصنيفات</button>
+    </div>
+
+    <div x-show="adminTab === 'products'" class="grid lg:grid-cols-5 gap-6">
+
+      <form @submit.prevent="saveProduct()" class="lg:col-span-2 bg-white rounded-2xl border border-slate-200 p-5 space-y-3 h-fit lg:sticky lg:top-20">
+        <h2 class="font-extrabold text-lg" x-text="productForm.id ? '✏️ تعديل منتج' : '➕ إضافة منتج جديد'"></h2>
+
+        <div>
+          <label class="block text-sm font-semibold mb-1">اسم المنتج *</label>
+          <input type="text" x-model.trim="productForm.title" required
+                 class="w-full rounded-xl border border-slate-200 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-400" />
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-sm font-semibold mb-1">السعر *</label>
+            <input type="number" min="0" step="0.01" x-model="productForm.price" required dir="ltr"
+                   class="w-full rounded-xl border border-slate-200 px-3 py-2 text-right focus:outline-none focus:ring-2 focus:ring-brand-400" />
+          </div>
+          <div>
+            <label class="block text-sm font-semibold mb-1">التصنيف *</label>
+            <select x-model="productForm.categoryId" required
+                    class="w-full rounded-xl border border-slate-200 px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-brand-400">
+              <option value="" disabled>اختر...</option>
+              <template x-for="cat in categories" :key="cat.id">
+                <option :value="cat.id" x-text="cat.emoji + ' ' + cat.name" :selected="cat.id === productForm.categoryId"></option>
+              </template>
+            </select>
+          </div>
+        </div>
+        <div>
+          <label class="block text-sm font-semibold mb-1">رابط الصورة</label>
+          <input type="url" x-model.trim="productForm.image" dir="ltr" placeholder="https://..."
+                 class="w-full rounded-xl border border-slate-200 px-3 py-2 text-left focus:outline-none focus:ring-2 focus:ring-brand-400" />
+          <div x-show="productForm.image" class="mt-2 w-24 h-24 rounded-xl overflow-hidden bg-slate-100 border">
+            <img :src="productForm.image" alt="معاينة" class="w-full h-full object-cover" />
+          </div>
+        </div>
+        <div>
+          <label class="block text-sm font-semibold mb-1">الوصف</label>
+          <textarea rows="3" x-model.trim="productForm.description"
+                    class="w-full rounded-xl border border-slate-200 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-400"></textarea>
+        </div>
+        <p x-show="productFormError" x-text="productFormError" class="text-sm text-red-500"></p>
+        <div class="flex gap-2 pt-1">
+          <button type="submit" class="flex-1 py-2.5 rounded-xl bg-brand-500 hover:bg-brand-600 text-white font-bold"
+                  x-text="productForm.id ? 'حفظ التعديلات' : 'إضافة المنتج'"></button>
+          <button type="button" x-show="productForm.id" @click="resetProductForm()"
+                  class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 font-semibold">إلغاء</button>
+        </div>
+      </form>
+
+      <div class="lg:col-span-3 bg-white rounded-2xl border border-slate-200 overflow-hidden">
+        <div class="p-4 border-b flex items-center justify-between gap-3">
+          <h2 class="font-extrabold">قائمة المنتجات</h2>
+          <input type="search" x-model="adminSearch" placeholder="بحث..."
+                 class="w-40 sm:w-56 rounded-xl border border-slate-200 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400" />
+        </div>
+        <ul class="divide-y">
+          <template x-for="p in adminProducts" :key="p.id">
+            <li class="p-3 flex items-center gap-3" :class="productForm.id === p.id && 'bg-brand-50'">
+              <div class="w-14 h-14 rounded-xl overflow-hidden bg-slate-100 shrink-0">
+                <template x-if="p.image && !brokenImages[p.id]">
+                  <img :src="p.image" :alt="p.title" class="w-full h-full object-cover" @error="brokenImages[p.id] = true" />
+                </template>
+                <template x-if="!p.image || brokenImages[p.id]">
+                  <div class="w-full h-full grid place-items-center bg-gradient-to-br from-brand-100 to-sky-100 text-2xl" x-text="categoryEmoji(p.categoryId)"></div>
+                </template>
+              </div>
+              <div class="flex-1 min-w-0">
+                <p class="font-bold text-sm truncate" x-text="p.title"></p>
+                <p class="text-xs text-slate-500">
+                  <span x-text="categoryName(p.categoryId)"></span> ·
+                  <span class="font-bold text-brand-600" x-text="formatPrice(p.price)"></span>
+                </p>
+              </div>
+              <button @click="editProduct(p)" class="px-3 py-1.5 rounded-lg bg-sky-50 text-sky-700 hover:bg-sky-100 text-sm font-semibold">تعديل</button>
+              <button @click="deleteProduct(p)" class="px-3 py-1.5 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 text-sm font-semibold">حذف</button>
+            </li>
+          </template>
+          <li x-show="adminProducts.length === 0" class="p-8 text-center text-slate-500 text-sm">لا توجد منتجات.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div x-show="adminTab === 'categories'" class="grid lg:grid-cols-5 gap-6">
+      <form @submit.prevent="saveCategory()" class="lg:col-span-2 bg-white rounded-2xl border border-slate-200 p-5 space-y-3 h-fit">
+        <h2 class="font-extrabold text-lg" x-text="categoryForm.id ? '✏️ تعديل تصنيف' : '➕ إضافة تصنيف'"></h2>
+        <div class="grid grid-cols-4 gap-3">
+          <div>
+            <label class="block text-sm font-semibold mb-1">رمز</label>
+            <input type="text" x-model.trim="categoryForm.emoji" maxlength="4" placeholder="🎁"
+                   class="w-full rounded-xl border border-slate-200 px-3 py-2 text-center text-xl focus:outline-none focus:ring-2 focus:ring-brand-400" />
+          </div>
+          <div class="col-span-3">
+            <label class="block text-sm font-semibold mb-1">اسم التصنيف *</label>
+            <input type="text" x-model.trim="categoryForm.name" required
+                   class="w-full rounded-xl border border-slate-200 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-400" />
+          </div>
+        </div>
+        <p x-show="categoryFormError" x-text="categoryFormError" class="text-sm text-red-500"></p>
+        <div class="flex gap-2">
+          <button type="submit" class="flex-1 py-2.5 rounded-xl bg-brand-500 hover:bg-brand-600 text-white font-bold"
+                  x-text="categoryForm.id ? 'حفظ' : 'إضافة التصنيف'"></button>
+          <button type="button" x-show="categoryForm.id" @click="resetCategoryForm()"
+                  class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 font-semibold">إلغاء</button>
+        </div>
+      </form>
+
+      <div class="lg:col-span-3 bg-white rounded-2xl border border-slate-200 overflow-hidden">
+        <div class="p-4 border-b"><h2 class="font-extrabold">التصنيفات</h2></div>
+        <ul class="divide-y">
+          <template x-for="cat in categories" :key="cat.id">
+            <li class="p-3 flex items-center gap-3" :class="categoryForm.id === cat.id && 'bg-brand-50'">
+              <span class="text-2xl w-10 text-center" x-text="cat.emoji"></span>
+              <div class="flex-1">
+                <p class="font-bold" x-text="cat.name"></p>
+                <p class="text-xs text-slate-500" x-text="productCountIn(cat.id) + ' منتج'"></p>
+              </div>
+              <button @click="editCategory(cat)" class="px-3 py-1.5 rounded-lg bg-sky-50 text-sky-700 hover:bg-sky-100 text-sm font-semibold">تعديل</button>
+              <button @click="deleteCategory(cat)" class="px-3 py-1.5 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 text-sm font-semibold">حذف</button>
+            </li>
+          </template>
+          <li x-show="categories.length === 0" class="p-8 text-center text-slate-500 text-sm">لا توجد تصنيفات.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <div x-show="toast.show" x-cloak x-transition
+       class="fixed bottom-5 left-1/2 -translate-x-1/2 z-[60] px-5 py-3 rounded-2xl bg-slate-900 text-white text-sm font-semibold shadow-lg"
+       x-text="toast.message"></div>
+
+  <button x-show="view === 'store' && cartCount > 0 && !cartOpen" x-cloak @click="cartOpen = true"
+          class="sm:hidden fixed bottom-5 left-5 z-30 w-14 h-14 rounded-full bg-brand-500 text-white text-2xl shadow-lg grid place-items-center"
+          aria-label="فتح السلة">
+    🛒
+    <span x-text="cartCount" class="absolute -top-1 -right-1 min-w-[1.4rem] h-[1.4rem] px-1 rounded-full bg-sky2-500 text-xs grid place-items-center ring-2 ring-white"></span>
+  </button>
+
+  <script>
+
+    const CONFIG = {
+
+      WHATSAPP_NUMBER: '970567947800',
+
+      CURRENCY: '₪',
+
+      ADMIN_PASSWORD_HASH: '4a9ba52b141aa23c9dc576f48ec594e30453c735a75fd3232c7da6dfc69264af',
+    };
+
+    async function hashPassword(password) {
+      const bytes = new TextEncoder().encode(password);
+      const digest = await crypto.subtle.digest('SHA-256', bytes);
+      return Array.from(new Uint8Array(digest), (b) => b.toString(16).padStart(2, '0')).join('');
+    }
+
+    const STORAGE = {
+      products: 'toybox_products_v1',
+      categories: 'toybox_categories_v1',
+      cart: 'toybox_cart_v1',
+      admin: 'toybox_admin_session',
+    };
+
+    const DEFAULT_CATEGORIES = [
+      { id: 'c-plush',    name: 'دمى وألعاب محشوة', emoji: '🧸' },
+      { id: 'c-edu',      name: 'ألعاب تعليمية',    emoji: '🧩' },
+      { id: 'c-cars',     name: 'سيارات ومركبات',   emoji: '🚗' },
+      { id: 'c-outdoor',  name: 'ألعاب خارجية',     emoji: '⚽' },
+      { id: 'c-gifts',    name: 'هدايا ومناسبات',   emoji: '🎁' },
+    ];
+
+    const DEFAULT_PRODUCTS = [
+      {
+  "categories": [
+    {
+      "id": "c-plush",
+      "name": "دمى وألعاب محشوة",
+      "emoji": "🧸"
+    },
+    {
+      "id": "c-edu",
+      "name": "ألعاب تعليمية",
+      "emoji": "🧩"
+    },
+    {
+      "id": "c-cars",
+      "name": "سيارات ومركبات",
+      "emoji": "🚗"
+    },
+    {
+      "id": "c-outdoor",
+      "name": "ألعاب خارجية",
+      "emoji": "⚽"
+    },
+    {
+      "id": "c-gifts",
+      "name": "هدايا ومناسبات",
+      "emoji": "🎁"
+    }
+  ],
+  "products": [
+    {
+      "id": "p-mvf22y5garzb",
+      "title": "عجلة",
+      "price": 20,
+      "categoryId": "c-cars",
+      "image": "https://www.raneen.com/media/catalog/product/1/5/155_1lwwhsuu0ey7yjyh.jpg?optimize=high&bg-color=255,255,255&fit=bounds&height=700&width=700&canvas=700:700",
+      "description": "عجلة بتجنن للاطفال"
+    },
+    {
+      "id": "p1",
+      "title": "دبدوب ناعم كبير",
+      "price": 89,
+      "categoryId": "c-plush",
+      "image": "",
+      "description": "دبدوب محشو فائق النعومة بطول 60 سم، مصنوع من مواد آمنة للأطفال وقابل للغسل."
+    },
+    {
+      "id": "p2",
+      "title": "أرنب محشو بأذنين طويلتين",
+      "price": 55,
+      "categoryId": "c-plush",
+      "image": "",
+      "description": "رفيق نوم لطيف للأطفال، خامة قطنية ناعمة ولون وردي فاتح."
+    },
+    {
+      "id": "p3",
+      "title": "بازل خريطة العالم 100 قطعة",
+      "price": 45,
+      "categoryId": "c-edu",
+      "image": "",
+      "description": "لغز تعليمي ممتع يعرّف الطفل على القارات والدول. مناسب من عمر 5 سنوات."
+    },
+    {
+      "id": "p4",
+      "title": "مكعبات بناء ملونة 200 قطعة",
+      "price": 120,
+      "categoryId": "c-edu",
+      "image": "",
+      "description": "مكعبات تنمّي الإبداع والمهارات الحركية الدقيقة، متوافقة مع أشهر العلامات."
+    },
+    {
+      "id": "p5",
+      "title": "لوح الحروف العربية المغناطيسي",
+      "price": 65,
+      "categoryId": "c-edu",
+      "image": "",
+      "description": "سبورة مغناطيسية مع حروف عربية ملونة لتعليم القراءة والكتابة بطريقة ممتعة."
+    },
+    {
+      "id": "p6",
+      "title": "سيارة سباق بالتحكم عن بعد",
+      "price": 149,
+      "categoryId": "c-cars",
+      "image": "",
+      "description": "سيارة سريعة بريموت لاسلكي وبطارية قابلة للشحن، تعمل حتى 30 دقيقة."
+    },
+    {
+      "id": "p7",
+      "title": "مجموعة شاحنات الإنشاء",
+      "price": 79,
+      "categoryId": "c-cars",
+      "image": "",
+      "description": "4 مركبات إنشاء: حفارة، رافعة، خلاطة وشاحنة قلاب. بلاستيك متين."
+    },
+    {
+      "id": "p8",
+      "title": "كرة قدم للأطفال",
+      "price": 35,
+      "categoryId": "c-outdoor",
+      "image": "",
+      "description": "كرة مقاس 4 خفيفة الوزن، مثالية للعب في الحديقة والملاعب."
+    },
+    {
+      "id": "p9",
+      "title": "سكوتر ثلاثي العجلات بإضاءة",
+      "price": 189,
+      "categoryId": "c-outdoor",
+      "image": "",
+      "description": "سكوتر قابل لتعديل الارتفاع بعجلات مضيئة، مناسب من عمر 3 إلى 8 سنوات."
+    },
+    {
+      "id": "p10",
+      "title": "صندوق هدايا مفاجآت",
+      "price": 99,
+      "categoryId": "c-gifts",
+      "image": "",
+      "description": "صندوق مغلّف بشكل أنيق يحتوي على تشكيلة ألعاب وحلويات مختارة — هدية مثالية لأعياد الميلاد."
+    },
+    {
+      "id": "p11",
+      "title": "بالونات عيد ميلاد (30 قطعة)",
+      "price": 25,
+      "categoryId": "c-gifts",
+      "image": "",
+      "description": "بالونات ملونة متنوعة مع شريط وزينة \"عيد ميلاد سعيد\"."
+    },
+    {
+      "id": "p12",
+      "title": "طقم رسم وتلوين 150 قطعة",
+      "price": 75,
+      "categoryId": "c-gifts",
+      "image": "",
+      "description": "حقيبة فنان متكاملة: ألوان خشبية وشمعية ومائية وأقلام تحديد."
+    }
+  ]
+}];
+
+    const store = {
+      get(key, fallback) {
+        try {
+          const raw = localStorage.getItem(key);
+          return raw ? JSON.parse(raw) : fallback;
+        } catch { return fallback; }
+      },
+      set(key, value) {
+        try { localStorage.setItem(key, JSON.stringify(value)); } catch {}
+      },
+      remove(key) {
+        try { localStorage.removeItem(key); } catch {}
+      },
+    };
+
+    const uid = (prefix) => prefix + '-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+    const clone = (obj) => JSON.parse(JSON.stringify(obj));
+
+    function app() {
+      return {
+
+        view: 'store',
+        products: [],
+        categories: [],
+        cart: [],
+        activeCategory: 'all',
+        search: '',
+        detail: null,
+        cartOpen: false,
+        brokenImages: {},
+        customer: { name: '', phone: '', address: '' },
+        errors: {},
+        toast: { show: false, message: '', timer: null },
+
+        isAdmin: false,
+        loginOpen: false,
+        loginPassword: '',
+        loginError: false,
+        adminTab: 'products',
+        adminSearch: '',
+        productForm: { id: null, title: '', price: '', categoryId: '', image: '', description: '' },
+        productFormError: '',
+        categoryForm: { id: null, name: '', emoji: '' },
+        categoryFormError: '',
+
+        init() {
+          this.categories = store.get(STORAGE.categories, null) ?? clone(DEFAULT_CATEGORIES);
+          this.products = store.get(STORAGE.products, null) ?? clone(DEFAULT_PRODUCTS);
+          this.cart = store.get(STORAGE.cart, []);
+          this.isAdmin = sessionStorageGet(STORAGE.admin) === '1';
+          this.resetProductForm();
+
+          this.$watch('products', (v) => { store.set(STORAGE.products, v); this.pruneCart(); });
+          this.$watch('categories', (v) => store.set(STORAGE.categories, v));
+          this.$watch('cart', (v) => store.set(STORAGE.cart, v));
+
+          if (location.hash === '#admin') this.openAdmin();
+        },
+
+        formatPrice(n) {
+          const value = Number(n) || 0;
+          return value.toLocaleString('en-US', { maximumFractionDigits: 2 }) + ' ' + CONFIG.CURRENCY;
+        },
+        categoryName(id) {
+          return this.categories.find(c => c.id === id)?.name ?? 'بدون تصنيف';
+        },
+        categoryEmoji(id) {
+          return this.categories.find(c => c.id === id)?.emoji || '🎁';
+        },
+        productCountIn(catId) {
+          return this.products.filter(p => p.categoryId === catId).length;
+        },
+        notify(message) {
+          clearTimeout(this.toast.timer);
+          this.toast.message = message;
+          this.toast.show = true;
+          this.toast.timer = setTimeout(() => (this.toast.show = false), 2200);
+        },
+
+        get filteredProducts() {
+          const q = this.search.trim().toLowerCase();
+          return this.products.filter(p =>
+            (this.activeCategory === 'all' || p.categoryId === this.activeCategory) &&
+            (!q || p.title.toLowerCase().includes(q) || (p.description || '').toLowerCase().includes(q))
+          );
+        },
+
+        get cartItems() {
+          return this.cart
+            .map(line => {
+              const p = this.products.find(x => x.id === line.id);
+              return p ? { ...p, qty: line.qty } : null;
+            })
+            .filter(Boolean);
+        },
+        get cartCount() {
+          return this.cartItems.reduce((sum, i) => sum + i.qty, 0);
+        },
+        get cartTotal() {
+          return this.cartItems.reduce((sum, i) => sum + Number(i.price) * i.qty, 0);
+        },
+        addToCart(productId) {
+          const line = this.cart.find(l => l.id === productId);
+          if (line) line.qty++;
+          else this.cart.push({ id: productId, qty: 1 });
+          this.notify('✅ تمت الإضافة إلى السلة');
+        },
+        changeQty(productId, delta) {
+          const line = this.cart.find(l => l.id === productId);
+          if (!line) return;
+          line.qty += delta;
+          if (line.qty <= 0) this.removeFromCart(productId);
+        },
+        removeFromCart(productId) {
+          this.cart = this.cart.filter(l => l.id !== productId);
+        },
+        clearCart() {
+          if (confirm('هل تريد إفراغ السلة؟')) this.cart = [];
+        },
+
+        pruneCart() {
+          const ids = new Set(this.products.map(p => p.id));
+          if (this.cart.some(l => !ids.has(l.id))) this.cart = this.cart.filter(l => ids.has(l.id));
+        },
+
+        validateCustomer() {
+          const e = {};
+          if (this.customer.name.length < 2) e.name = 'يرجى إدخال الاسم';
+          const digits = this.customer.phone.replace(/[^\d]/g, '');
+          if (digits.length < 7 || digits.length > 15) e.phone = 'يرجى إدخال رقم هاتف صحيح';
+          if (this.customer.address.length < 5) e.address = 'يرجى إدخال عنوان التوصيل بالتفصيل';
+          this.errors = e;
+          return Object.keys(e).length === 0;
+        },
+        buildWhatsAppMessage() {
+          const lines = [];
+          lines.push(' *طلب جديد من ToyBox Gifts*');
+          lines.push('━━━━━━━━━━━━━━━');
+          lines.push('* المنتجات:*');
+          this.cartItems.forEach((item, i) => {
+            lines.push(`${i + 1}. ${item.title}`);
+            lines.push(`    الكمية: ${item.qty} × ${this.formatPrice(item.price)} = ${this.formatPrice(item.price * item.qty)}`);
+          });
+          lines.push('━━━━━━━━━━━━━━━');
+          lines.push(`*عدد القطع:* ${this.cartCount}`);
+          lines.push(`* الإجمالي:* ${this.formatPrice(this.cartTotal)}`);
+          lines.push('━━━━━━━━━━━━━━━');
+          lines.push('* بيانات العميل:*');
+          lines.push(`الاسم: ${this.customer.name}`);
+          lines.push(`الهاتف: ${this.customer.phone}`);
+          lines.push(`العنوان: ${this.customer.address}`);
+          lines.push('━━━━━━━━━━━━━━━');
+          lines.push(` ${new Date().toLocaleString('ar-EG')}`);
+          return lines.join('\n');
+        },
+        checkout() {
+          if (this.cartItems.length === 0) return;
+          if (!this.validateCustomer()) {
+            this.notify('⚠️ يرجى إكمال بيانات التوصيل');
+            return;
+          }
+          const message = this.buildWhatsAppMessage();
+
+          const url = `https://wa.me/${CONFIG.WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
+
+          this.cart = [];
+          this.cartOpen = false;
+          this.notify('🎉 جارٍ تحويلك إلى واتساب...');
+          window.location.href = url;
+        },
+
+        openAdmin() {
+          if (this.isAdmin) { this.view = 'admin'; window.scrollTo(0, 0); return; }
+          this.loginPassword = '';
+          this.loginError = false;
+          this.loginOpen = true;
+          this.$nextTick(() => this.$refs.loginInput?.focus());
+        },
+        async login() {
+          let hash;
+          try {
+            hash = await hashPassword(this.loginPassword);
+          } catch {
+
+            this.loginError = true;
+            this.notify('⚠️ التشفير غير متاح — افتح الموقع عبر https');
+            return;
+          }
+          if (hash === CONFIG.ADMIN_PASSWORD_HASH.toLowerCase()) {
+            this.loginPassword = '';
+            this.isAdmin = true;
+            sessionStorageSet(STORAGE.admin, '1');
+            this.loginOpen = false;
+            this.view = 'admin';
+            window.scrollTo(0, 0);
+          } else {
+            this.loginError = true;
+          }
+        },
+        logout() {
+          this.isAdmin = false;
+          sessionStorageSet(STORAGE.admin, null);
+          this.view = 'store';
+          if (location.hash === '#admin') history.replaceState(null, '', location.pathname);
+        },
+
+        get adminProducts() {
+          const q = this.adminSearch.trim().toLowerCase();
+          return q ? this.products.filter(p => p.title.toLowerCase().includes(q)) : this.products;
+        },
+        resetProductForm() {
+          this.productForm = { id: null, title: '', price: '', categoryId: this.categories[0]?.id ?? '', image: '', description: '' };
+          this.productFormError = '';
+        },
+        editProduct(p) {
+          this.productForm = { ...p };
+          this.productFormError = '';
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        },
+        saveProduct() {
+          const f = this.productForm;
+          const price = parseFloat(f.price);
+          if (!f.title) return (this.productFormError = 'اسم المنتج مطلوب');
+          if (isNaN(price) || price < 0) return (this.productFormError = 'يرجى إدخال سعر صحيح');
+          if (!f.categoryId) return (this.productFormError = 'يرجى اختيار التصنيف');
+
+          const data = { title: f.title, price, categoryId: f.categoryId, image: f.image, description: f.description };
+          if (f.id) {
+            this.products = this.products.map(p => p.id === f.id ? { ...p, ...data } : p);
+            delete this.brokenImages[f.id];
+            this.notify('✅ تم حفظ التعديلات');
+          } else {
+            this.products = [{ id: uid('p'), ...data }, ...this.products];
+            this.notify('✅ تمت إضافة المنتج');
+          }
+          this.resetProductForm();
+        },
+        deleteProduct(p) {
+          if (!confirm(`حذف المنتج "${p.title}"؟`)) return;
+          this.products = this.products.filter(x => x.id !== p.id);
+          if (this.productForm.id === p.id) this.resetProductForm();
+          this.notify('🗑️ تم حذف المنتج');
+        },
+
+        resetCategoryForm() {
+          this.categoryForm = { id: null, name: '', emoji: '' };
+          this.categoryFormError = '';
+        },
+        editCategory(cat) {
+          this.categoryForm = { ...cat };
+          this.categoryFormError = '';
+        },
+        saveCategory() {
+          const f = this.categoryForm;
+          if (!f.name) return (this.categoryFormError = 'اسم التصنيف مطلوب');
+          const duplicate = this.categories.some(c => c.name === f.name && c.id !== f.id);
+          if (duplicate) return (this.categoryFormError = 'يوجد تصنيف بنفس الاسم');
+
+          const emoji = f.emoji || '🎁';
+          if (f.id) {
+            this.categories = this.categories.map(c => c.id === f.id ? { ...c, name: f.name, emoji } : c);
+            this.notify('✅ تم تعديل التصنيف');
+          } else {
+            this.categories = [...this.categories, { id: uid('c'), name: f.name, emoji }];
+            this.notify('✅ تمت إضافة التصنيف');
+          }
+          this.resetCategoryForm();
+          if (!this.productForm.categoryId) this.productForm.categoryId = this.categories[0]?.id ?? '';
+        },
+        deleteCategory(cat) {
+          const count = this.productCountIn(cat.id);
+          if (count > 0) {
+            alert(`لا يمكن حذف "${cat.name}" لأنه يحتوي على ${count} منتج. انقل المنتجات أو احذفها أولاً.`);
+            return;
+          }
+          if (!confirm(`حذف التصنيف "${cat.name}"؟`)) return;
+          this.categories = this.categories.filter(c => c.id !== cat.id);
+          if (this.activeCategory === cat.id) this.activeCategory = 'all';
+          if (this.productForm.categoryId === cat.id) this.productForm.categoryId = this.categories[0]?.id ?? '';
+          this.notify('🗑️ تم حذف التصنيف');
+        },
+
+        exportData() {
+          const blob = new Blob([JSON.stringify({ categories: this.categories, products: this.products }, null, 2)], { type: 'application/json' });
+          const a = document.createElement('a');
+          a.href = URL.createObjectURL(blob);
+          a.download = 'toybox-data.json';
+          a.click();
+          URL.revokeObjectURL(a.href);
+        },
+        importData(event) {
+          const file = event.target.files?.[0];
+          if (!file) return;
+          const reader = new FileReader();
+          reader.onload = () => {
+            try {
+              const data = JSON.parse(reader.result);
+              if (!Array.isArray(data.categories) || !Array.isArray(data.products)) throw new Error();
+              this.categories = data.categories;
+              this.products = data.products;
+              this.resetProductForm();
+              this.notify('✅ تم استيراد البيانات');
+            } catch {
+              alert('ملف غير صالح');
+            }
+            event.target.value = '';
+          };
+          reader.readAsText(file);
+        },
+        resetData() {
+          if (!confirm('سيتم استبدال جميع المنتجات والتصنيفات بالبيانات الافتراضية. متابعة؟')) return;
+          this.categories = clone(DEFAULT_CATEGORIES);
+          this.products = clone(DEFAULT_PRODUCTS);
+          this.activeCategory = 'all';
+          this.resetProductForm();
+          this.resetCategoryForm();
+          this.notify('↺ تمت الاستعادة');
+        },
+      };
+    }
+
+    function sessionStorageGet(key) {
+      try { return sessionStorage.getItem(key); } catch { return null; }
+    }
+    function sessionStorageSet(key, value) {
+      try { value === null ? sessionStorage.removeItem(key) : sessionStorage.setItem(key, value); } catch {}
+    }
+  </script>
+
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/dist/cdn.min.js"></script>
+</body>
+</html>
